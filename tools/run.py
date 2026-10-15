@@ -47,6 +47,8 @@ def command(args):
             cmd.append('--grab-input')
         if options.get('playlist_url'):
             cmd += ['--m3u-config', str(config)]
+        if getattr(args, 'tv_guide', False):
+            cmd += ['--tv-guide-epg', str(data / 'epg.sqlite')]
         cmd += ['--mpv-option=--audio-device=auto', '--mpv-option=--demuxer-lavf-o=extension_picky=0']
         cmd += ['--mpv-option=' + option for option in args.mpv_option]
         return cmd
@@ -71,6 +73,7 @@ def main():
     parser.add_argument('--input-backend', choices=['auto', 'linux', 'macos'], default='auto')
     parser.add_argument('--input-device', default='flirc')
     parser.add_argument('--no-grab', action='store_true')
+    parser.add_argument('--tv-guide', action='store_true', help='Enable the separate H-key TV programme grid')
     parser.add_argument('--mpv-option', action='append', default=[])
     args = parser.parse_args()
     try:
