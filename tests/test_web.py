@@ -123,7 +123,24 @@ class CatalogTests(unittest.TestCase):
                 self.assertEqual(json.loads(raw)['number'], '19151')
                 self.assertEqual(box.current.number, '19151')
                 self.assertNotIn('PRIVATE_', raw.decode())
+                self.assertEqual(request('POST', '/api/control', {'action': 'exit'})[0], 403)
+                self.assertFalse(box.stop_event.is_set())
+                status, raw = request('POST', '/api/control', {'action': 'exit'}, **auth)
+                self.assertEqual(status, 200)
+                self.assertFalse(json.loads(raw)['running'])
+                self.assertTrue(box.stop_event.is_set())
             finally:
                 web.shutdown(); web.server_close(); worker.join(timeout=3)
                 remote.close()
                 box._cancel_number_timer(); box._cancel_guide_timer()
+
+    def test_guide_remains_available_when_player_has_exited(self):
+        with tempfile.TemporaryDirectory(dir='/tmp') as directory:
+            web = GuideServer(('127.0.0.1', 0), self.catalog, Path(directory) / 'absent.sock')
+            try:
+                self.assertEqual(web.control({'action': 'status'}), {'ok': True, 'running': False})
+                self.assertEqual(web.catalog.query({})['count'], 3)
+                with self.assertRaises(FileNotFoundError):
+                    web.control({'action': 'exit'})
+            finally:
+                web.server_close()

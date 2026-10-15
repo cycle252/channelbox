@@ -7,7 +7,7 @@ import threading
 from pathlib import Path
 from unittest.mock import Mock, patch
 from channelbox import ChannelBox, Channel
-from channelbox_remote import RemoteServer, dispatch
+from channelbox_remote import RemoteServer, dispatch, send_request
 from tools import remote_app
 
 
@@ -42,6 +42,23 @@ class RemoteTests(unittest.TestCase):
                     {'action': 'shell', 'command': 'anything'}, []]:
             with self.assertRaises(ValueError):
                 dispatch(self.box, req)
+
+    def test_exit_stops_even_with_guide_open_and_preserves_saved_channel(self):
+        dispatch(self.box, {'action': 'tune', 'number': '201'})
+        dispatch(self.box, {'action': 'key', 'key': 'b'})
+        self.assertTrue(self.box.guide_open)
+        result = dispatch(self.box, {'action': 'exit'})
+        self.assertTrue(self.box.stop_event.is_set())
+        self.assertFalse(result['running'])
+        self.assertEqual(result['number'], '201')
+        self.assertEqual(json.loads(self.box.state_file.read_text())['url'], self.box.current.url)
+
+    def test_missing_socket_reports_stopped_only_for_status(self):
+        with tempfile.TemporaryDirectory(dir='/tmp') as directory:
+            path = Path(directory) / 'control.sock'
+            self.assertEqual(send_request(path, {'action': 'status'}), {'ok': True, 'running': False})
+            with self.assertRaises(FileNotFoundError):
+                send_request(path, {'action': 'exit'})
 
     def test_socket_is_private_and_returns_no_stream_addresses(self):
         # Short Unix path also works within macOS's socket length limit.
