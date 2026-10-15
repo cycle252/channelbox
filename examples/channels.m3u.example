@@ -1,0 +1,5 @@
+#EXTM3U
+#EXTINF:-1 tvg-chno="101" group-title="News",Example News
+https://example.invalid/news.m3u8
+#EXTINF:-1 tvg-chno="201" group-title="Kids",Example Kids
+https://example.invalid/kids.m3u8
