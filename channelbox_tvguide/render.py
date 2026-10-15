@@ -7,8 +7,10 @@ from .model import HALF_HOUR, WINDOW, ROWS, FILTERS, clock, clean
 WIDTH, HEIGHT = 1280, 720
 PREVIEW = (896, 42, 352, 198)
 GRID_X, GRID_Y, GRID_W, ROW_H = 412, 322, 836, 50
-BG, PANEL, GRID, LINE = '0B1429', '14213A', '1D2D49', '304766'
-WHITE, MUTED, BLUE, INK, ACCENT = 'F1F5FC', 'A6B6D0', '8DBBFF', '10213A', '7EE3DB'
+# Match the browser guide's charcoal surfaces and lime-green accents.
+BG, PANEL, GRID, LINE = '101318', '15191F', '1B2027', '2A3039'
+WHITE, MUTED, INK, ACCENT = 'EEF1F5', '929CA9', '192211', 'C7F37A'
+ACTIVE, SELECTED, PREVIEW_LINE = '232B24', '20291E', '43523B'
 
 
 def literal(value):
@@ -51,15 +53,15 @@ def render(view):
     c.rect(0, py, px, ph, BG)
     c.rect(px+pw, py, WIDTH-px-pw, ph, BG)
     c.rect(0, py+ph, WIDTH, HEIGHT-py-ph, BG)
-    c.rect(px-2, py-2, pw+4, 2, LINE); c.rect(px-2, py+ph, pw+4, 2, LINE)
-    c.rect(px-2, py, 2, ph, LINE); c.rect(px+pw, py, 2, ph, LINE)
+    c.rect(px-2, py-2, pw+4, 2, PREVIEW_LINE); c.rect(px-2, py+ph, pw+4, 2, PREVIEW_LINE)
+    c.rect(px-2, py, 2, ph, PREVIEW_LINE); c.rect(px+pw, py, 2, ph, PREVIEW_LINE)
     c.text(36, 18, 'CHANNELBOX  /  TV GUIDE', 13, ACCENT, True)
     c.text(1040, 17, datetime.fromtimestamp(view['now']).strftime('%a, %b %d   %I:%M %p').replace(' 0', ' '), 13, MUTED, width=208)
     selected = view.get('selected')
     info = view.get('programme') or {}
     c.wrap(36, 62, info.get('title', 'Select a channel'), 810, 30, 2, bold=True)
     if selected:
-        c.text(38, 145, selected.number + '  ·  ' + selected.name, 17, BLUE, True, 805)
+        c.text(38, 145, selected.number + '  ·  ' + selected.name, 17, ACCENT, True, 805)
         if not info.get('missing') and info.get('start'):
             label = clock(info['start']) + ' – ' + clock(info['stop'])
             label += '    ·    ' + str(round((info['stop']-info['start'])/60)) + ' min'
@@ -77,19 +79,19 @@ def render(view):
     start = view['start']
     for i in range(4):
         x = GRID_X + i * GRID_W / 4
-        c.text(x+7, 300, clock(start+i*HALF_HOUR), 13, BLUE, True)
+        c.text(x+7, 300, clock(start+i*HALF_HOUR), 13, ACCENT, True)
     for index, (key, label) in enumerate(FILTERS):
         y = GRID_Y + index * ROW_H
         active = key == view['filter']
         focused = view['focus'] == 'categories' and index == view['category']
-        c.rect(32, y+2, 176, ROW_H-4, BLUE if focused else PANEL if active else BG)
-        c.text(44, y+8, label, 15, INK if focused else WHITE if active else MUTED, active or focused, 153)
-        c.text(44, y+29, f"{view['counts'].get(key, 0):,} channels", 10, INK if focused else MUTED)
+        c.rect(32, y+2, 176, ROW_H-4, ACCENT if focused else ACTIVE if active else BG)
+        c.text(44, y+8, label, 15, INK if focused else ACCENT if active else MUTED, active or focused, 153)
+        c.text(44, y+29, f"{view['counts'].get(key, 0):,} channels", 10, INK if focused else ACCENT if active else MUTED)
     for row, item in enumerate(view['rows']):
         channel, programmes = item['channel'], item['programmes']
         y = GRID_Y + row * ROW_H
         selected_row = selected is not None and channel.number == selected.number
-        c.rect(220, y+2, 186, ROW_H-4, '2D4465' if selected_row else PANEL)
+        c.rect(220, y+2, 186, ROW_H-4, SELECTED if selected_row else PANEL)
         c.text(228, y+15, channel.number, 15, ACCENT if selected_row else MUTED, True, 51)
         name = ('★ ' if item['favorite'] else '') + channel.name
         c.wrap(283, y+6, name, 115, 13, 2, WHITE, selected_row)
@@ -98,7 +100,7 @@ def render(view):
             end = min(start+WINDOW, programme.get('visible_stop', programme['stop']))
             x, w = GRID_X+(begin-start)/WINDOW*GRID_W, (end-begin)/WINDOW*GRID_W
             active = selected_row and programme == info and view['focus'] == 'grid'
-            c.rect(x+1, y+2, w-2, ROW_H-4, BLUE if active else GRID if not programme.get('missing') else PANEL)
+            c.rect(x+1, y+2, w-2, ROW_H-4, ACCENT if active else GRID if not programme.get('missing') else PANEL)
             if w > 28:
                 c.text(x+9, y+14, programme['title'], 17 if active else 16,
                        INK if active else MUTED if programme.get('missing') else WHITE,
