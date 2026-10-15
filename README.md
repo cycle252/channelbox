@@ -9,6 +9,7 @@ your phone/computer browser and watch it on the TV connected to the Pi.
 - Full-screen mpv playback, channel up/down, numeric tuning and previous channel.
 - FLIRC/keyboard controls, volume, mute, pause and last-channel memory.
 - Searchable web guide with categories, logos and shared favorites.
+- Exit player buttons on both browser remotes; the guide stays available.
 - Current programme titles, local airing times, progress and next-programme details.
 - Large lineups: bounded server pages and a small window of visible browser rows.
 - Local playlist fallback, daily playlist refresh and six-hour EPG refresh.
@@ -111,6 +112,13 @@ systemctl --user restart channelbox-guide.service
 journalctl --user -u channelbox.service -n 50
 journalctl --user -u channelbox-guide.service -n 50
 ```
+
+## Optional TV interface
+
+A separate [TV Guide preview](docs/TV_GUIDE.md) runs inside the TV player,
+with a live video pane, a two-hour programme grid and FLIRC/keyboard
+navigation. Enable it with `python3 tools/run.py player --tv-guide`; H opens
+it. The browser guide remains available alongside it.
 
 ## More information
 

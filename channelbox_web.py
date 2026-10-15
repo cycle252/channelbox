@@ -194,7 +194,7 @@ class GuideServer(ThreadingHTTPServer):
 
     def control(self, request):
         action = request.get('action')
-        if action not in ('status', 'tune', 'favorite', 'key', 'close'):
+        if action not in ('status', 'tune', 'favorite', 'key', 'close', 'exit'):
             raise ValueError('Unsupported command')
         if action in ('tune', 'favorite'):
             self.catalog.refresh()
@@ -202,17 +202,9 @@ class GuideServer(ThreadingHTTPServer):
                 channel = self.catalog.by_number.get(request.get('number'))
                 if not channel or request.get('identity') != channel['identity']:
                     raise ValueError('Channel list changed; reload the guide')
-        payload = json.dumps(request).encode() + b'\n'
-        if len(payload) > 4096:
-            raise ValueError('Command too large')
-        with self.command_lock, socket.socket(socket.AF_UNIX) as client:
-            client.settimeout(5)
-            client.connect(self.control_socket)
-            client.sendall(payload)
-            raw = client.makefile('rb').readline(4097)
-        if len(raw) > 4096:
-            raise ValueError('Invalid player response')
-        value = json.loads(raw)
+        from channelbox_remote import send_request
+        with self.command_lock:
+            value = send_request(self.control_socket, request)
         if not value.get('ok'):
             raise ValueError('Player rejected command; refresh the guide')
         return value

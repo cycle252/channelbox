@@ -270,7 +270,8 @@ class ChannelBox:
     def __init__(self, playlist: str, state_file: Path, *, favorites_file: Path | None = None,
                  input_backend: str = "auto", input_device: str = "flirc",
                  grab_input: bool = False, mpv_options=(), feed_url: str | None = None,
-                 remote_socket: str | None = None, m3u_config: str | None = None):
+                 remote_socket: str | None = None, m3u_config: str | None = None,
+                 tv_guide_epg: str | None = None):
         self.playlist_source = playlist
         self.channels = parse_m3u(playlist)
         self.state_file = state_file
@@ -313,6 +314,10 @@ class ChannelBox:
         self.number_buffer = ""
         self.number_timer = None
         self.number_timeout = 1.2
+        self.tv_guide = None
+        if tv_guide_epg:
+            from channelbox_tvguide import TVGuide
+            self.tv_guide = TVGuide(self, tv_guide_epg)
 
     def _starting_index(self):
         saved_id = self.state.get("id")
@@ -755,6 +760,14 @@ class ChannelBox:
     def _on_press(self, key: str):
         # Both platform adapters emit the same symbolic key names.
         LOG.debug("Key received: %s", key)
+        if self.tv_guide:
+            try:
+                if self.tv_guide.handle_key(key):
+                    return
+            except Exception as error:
+                self.tv_guide.close()
+                LOG.warning("TV guide closed (%s); playback continues", type(error).__name__)
+                return
 
         if key == "up":
             if self.guide_open:
@@ -944,6 +957,12 @@ class ChannelBox:
                 self.update_thread = threading.Thread(target=self._fetch_m3u_updates, daemon=True)
                 self.update_thread.start()
             while not self.stop_event.wait(2):
+                if self.tv_guide:
+                    try:
+                        self.tv_guide.tick()
+                    except Exception as error:
+                        self.tv_guide.close()
+                        LOG.warning("TV guide closed (%s); playback continues", type(error).__name__)
                 try:
                     self.apply_pending_feed()
                     self.apply_pending_m3u()
@@ -978,6 +997,8 @@ class ChannelBox:
                     if self.listener.ident is not None:
                         self.listener.join(timeout=2)
             finally:
+                if self.tv_guide:
+                    self.tv_guide.close()
                 self.mpv.stop()
 
 
@@ -987,6 +1008,7 @@ def main():
     parser.add_argument("--feed-url", help="HTTPS curated JSON feed; downloads on start and daily with local fallback")
     parser.add_argument("--m3u-config", help="Private JSON file with HTTPS playlist_url; refresh on start and daily")
     parser.add_argument("--remote-socket", help="Optional private Unix socket for SSH remote control")
+    parser.add_argument("--tv-guide-epg", help="Enable the separate H-key TV guide with this local EPG SQLite cache")
     parser.add_argument(
         "--state-file",
         default="~/.channelbox/state.json",
@@ -1031,6 +1053,7 @@ def main():
         feed_url=args.feed_url,
         remote_socket=args.remote_socket,
         m3u_config=args.m3u_config,
+        tv_guide_epg=args.tv_guide_epg,
     ).run()
 
 

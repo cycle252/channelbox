@@ -8,7 +8,7 @@ import socketserver
 import sys
 import threading
 
-KEYS = set('0123456789abcdim pvx'.replace(' ', '')) | {'up', 'down', 'enter'}
+KEYS = set('0123456789abcdhim pvx'.replace(' ', '')) | {'up', 'down', 'left', 'right', 'enter'}
 LIMIT = 4096
 
 
@@ -22,8 +22,15 @@ def dispatch(box, request):
                 raise ValueError('Unsupported key')
             box.on_press(request['key'])
         elif action == 'close':
+            if box.tv_guide and box.tv_guide.is_open:
+                box.tv_guide.close()
             if box.guide_open:
                 box.close_guide()
+        elif action == 'exit':
+            box._cancel_number_timer()
+            box._cancel_guide_timer()
+            box.save_state()
+            box.stop()
         elif action == 'tune':
             number = request.get('number')
             if not isinstance(number, str) or not number.isascii() or not number.isdigit() or not 1 <= len(number) <= 5:
@@ -33,6 +40,8 @@ def dispatch(box, request):
                 raise ValueError('Channel not found')
             if request.get('identity') and request['identity'] != selected.identity:
                 raise ValueError('Channel list changed; refresh before tuning')
+            if box.tv_guide and box.tv_guide.is_open:
+                box.tv_guide.close()
             box._cancel_number_timer()
             if box.guide_open:
                 box.close_guide()
@@ -59,7 +68,9 @@ def dispatch(box, request):
                 box.render_guide()
         elif action != 'status':
             raise ValueError('Unsupported action')
-        return {'ok': True, 'number': box.current.number, 'name': box.current.name,
+        return {'ok': True, 'running': not box.stop_event.is_set(),
+                'tv_guide': bool(box.tv_guide and box.tv_guide.is_open),
+                'number': box.current.number, 'name': box.current.name,
                 'count': len(box.channels), 'guide': box.guide_open,
                 'digits': box.number_buffer}
 
@@ -107,6 +118,29 @@ class RemoteServer:
         self.path.unlink(missing_ok=True)
 
 
+def send_request(path, request):
+    """Send one bounded request; an absent local player has a stopped status."""
+    payload = json.dumps(request).encode() + b'\n'
+    if len(payload) > LIMIT:
+        raise ValueError('Request too large')
+    with socket.socket(socket.AF_UNIX) as client:
+        client.settimeout(5)
+        try:
+            client.connect(str(path))
+        except (FileNotFoundError, ConnectionRefusedError):
+            if request == {'action': 'status'}:
+                return {'ok': True, 'running': False}
+            raise
+        client.sendall(payload)
+        raw = client.makefile('rb').readline(LIMIT + 1)
+    if len(raw) > LIMIT:
+        raise ValueError('Invalid player response')
+    value = json.loads(raw)
+    if not isinstance(value, dict):
+        raise ValueError('Invalid player response')
+    return value
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--send', required=True)
@@ -115,12 +149,7 @@ def main():
         raw = sys.stdin.buffer.readline(LIMIT + 1)
         if len(raw) > LIMIT:
             raise ValueError()
-        with socket.socket(socket.AF_UNIX) as client:
-            client.settimeout(5)
-            client.connect(args.send)
-            client.sendall(raw.rstrip(b'\n') + b'\n')
-            response = client.makefile('rb').readline(LIMIT + 1)
-        value = json.loads(response)
+        value = send_request(args.send, json.loads(raw))
         print(json.dumps(value))
     except Exception:
         print(json.dumps({'ok': False, 'error': 'Pi player is not available'}))

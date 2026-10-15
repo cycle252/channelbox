@@ -12,14 +12,15 @@ LOG = logging.getLogger("channelbox.input")
 LINUX_KEYS = {
     "KEY_UP": "up", "KEY_CHANNELUP": "up", "KEY_PAGEUP": "up",
     "KEY_DOWN": "down", "KEY_CHANNELDOWN": "down", "KEY_PAGEDOWN": "down",
+    "KEY_LEFT": "left", "KEY_RIGHT": "right",
     "KEY_ENTER": "enter", "KEY_KPENTER": "enter", "KEY_OK": "enter",
     "KEY_ESC": "esc", "KEY_EXIT": "esc", "KEY_F5": "f5",
     "KEY_VOLUMEUP": "v", "KEY_VOLUMEDOWN": "x", "KEY_MUTE": "m",
     "KEY_PLAYPAUSE": "p", "KEY_INFO": "i", "KEY_EPG": "b",
-    **{f"KEY_{char.upper()}": char for char in "vxcmpigfabd0123456789"},
+    **{f"KEY_{char.upper()}": char for char in "vxcmpigfabdh0123456789"},
     **{f"KEY_KP{digit}": digit for digit in "0123456789"},
 }
-REPEAT_KEYS = {"up", "down", "v", "x"}
+REPEAT_KEYS = {"up", "down", "left", "right", "v", "x"}
 
 
 def linux_key(name: str, value: int) -> str | None:
@@ -31,8 +32,8 @@ def linux_key(name: str, value: int) -> str | None:
 
 
 def macos_key(key, keyboard) -> str | None:
-    for name in ("up", "down", "enter", "esc", "f5"):
-        if key == getattr(keyboard.Key, name):
+    for name in ("up", "down", "left", "right", "enter", "esc", "f5"):
+        if key == getattr(keyboard.Key, name, None):
             return name
     char = getattr(key, "char", None)
     return char.lower() if char else None
