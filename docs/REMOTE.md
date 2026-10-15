@@ -31,3 +31,11 @@ Use `sudo evtest` to inspect FLIRC, then quit evtest before starting playback.
 The default selector matches `flirc`; pass `--input-device` to the portable
 player launcher for a different name or stable event-device path.
 For temporary keyboard testing, use `--input-device auto --no-grab`.
+
+## Exit video playback
+
+Both browser controls have **Exit player**. This cleanly exits the controller
+and mpv, even if the TV guide overlay is open. The EPG web server stays running.
+Close guide only closes the overlay. With the documented services, a clean
+exit stays stopped; restart with `systemctl --user start channelbox.service`
+or reboot with desktop autostart configured.

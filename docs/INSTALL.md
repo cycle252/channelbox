@@ -79,6 +79,20 @@ Stop the services before manually running a second player:
 systemctl --user stop channelbox-guide.service channelbox.service
 ```
 
+Both the compact remote and EPG guide have an **Exit player** button. It exits
+the TV player and closes mpv; the web guide remains available for browsing.
+A clean exit stays stopped because the player service uses `Restart=on-failure`.
+**Close guide** on the compact remote only dismisses the TV overlay.
+
+To resume after Exit player, run as the same Pi user:
+
+```sh
+systemctl --user start channelbox.service
+```
+
+With desktop autostart configured, the next graphical login or reboot also
+starts both services again. Exit player does not shut down the Pi.
+
 Remove desktop startup by removing its user autostart file:
 
 ```sh
