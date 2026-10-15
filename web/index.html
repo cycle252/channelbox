@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="guide-token" content="__GUIDE_TOKEN__">
+  <meta name="theme-color" content="#101318">
+  <title>ChannelBox · Channel guide</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="ChannelBox home"><span class="brand-mark" aria-hidden="true">▦</span>Channel<span>Box</span></a>
+    <div class="top-title">YOUR CHANNELS. ONE PLACE.</div>
+    <div class="connection"><span id="connection-dot" class="dot"></span><span id="connection">Connecting to your TV</span></div>
+  </header>
+  <div class="workspace">
+    <aside class="sidebar" id="sidebar" aria-label="Channel categories">
+      <div class="sidebar-heading"><span>YOUR LIBRARY</span><button id="close-menu" class="icon-button mobile-only" aria-label="Close categories">✕</button></div>
+      <nav class="library">
+        <button class="nav-item active" id="all-channels"><span class="nav-symbol">▦</span><span>All channels</span><span class="nav-count" id="all-count">—</span></button>
+        <button class="nav-item" id="favorites"><span class="nav-symbol">☆</span><span>Favorites</span><span class="nav-count" id="favorite-count">0</span></button>
+      </nav>
+      <div class="category-heading"><span>CATEGORIES</span><span id="category-count">—</span></div>
+      <label class="category-search"><span aria-hidden="true">⌕</span><input id="category-search" placeholder="Find a category" aria-label="Find a category" autocomplete="off"></label>
+      <nav id="categories" class="categories" aria-label="Categories"></nav>
+      <div class="sidebar-footer"><span class="tiny-mark">▦</span><div>Made for the big screen<small>Controlled from right here.</small></div></div>
+    </aside>
+    <button id="menu-backdrop" class="menu-backdrop" aria-label="Close category menu" hidden></button>
+    <main class="browser">
+      <div class="browse-heading">
+        <div class="eyebrow">EXPLORE YOUR LINEUP</div>
+        <div class="heading-line"><h1 id="heading">All channels</h1><button id="open-menu" class="category-button mobile-only">☰ Categories</button></div>
+        <p id="subtitle">Loading your channel library…</p>
+      </div>
+      <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg><input id="search" type="search" placeholder="Search channels, numbers, or categories" aria-label="Search channels" autocomplete="off"><kbd>/</kbd></label>
+      <div class="list-toolbar"><span id="result-count" aria-live="polite">Loading channels</span><span>PLAY ON YOUR TV <span class="tiny-dot"></span></span></div>
+      <div id="channel-scroll" class="channel-scroll" tabindex="-1" aria-label="Channel list">
+        <div id="channels" class="channel-list" role="list"></div>
+        <div id="empty" class="empty" hidden><span>⌕</span><h2>No channels found</h2><p id="empty-text">Try another name, channel number, or category.</p><button id="clear-filters" class="primary-button">Show all channels</button></div>
+      </div>
+      <div class="list-footer"><div class="update-times"><span id="updated">Playlist update time unavailable</span><span id="epg-updated">Loading program listings…</span></div><button id="reload-library">↻ Refresh library</button></div>
+    </main>
+    <aside class="player-panel" aria-label="TV controls">
+      <div class="eyebrow"><span class="tiny-dot"></span> ON YOUR TV</div>
+      <div class="now-card">
+        <div class="now-visual"><div class="signal-ring"></div><div class="now-logo" id="now-logo">▦</div><span class="live-badge">TV PLAYER</span></div>
+        <div class="now-body"><div class="now-number" id="now-number">CHANNEL —</div><h2 id="now-name">Connecting…</h2><p id="now-group">Choose a channel to watch.</p><div class="now-program" id="now-program"><span class="program-label">ON NOW</span><h3 id="now-program-title">No program information</h3><p id="now-program-time"></p><div class="program-progress"><span id="now-program-progress"></span></div><p id="next-program"></p></div></div>
+      </div>
+      <div class="remote-heading">THE LITTLE REMOTE</div>
+      <div class="transport"><button data-key="down" aria-label="Previous channel in lineup">−<span>CH</span></button><button data-key="p" class="pause" aria-label="Play or pause TV">Ⅱ / ▶</button><button data-key="up" aria-label="Next channel in lineup">+<span>CH</span></button></div>
+      <div class="volume"><button data-key="x" aria-label="Volume down">VOL −</button><button data-key="m" aria-label="Mute or unmute TV">Mute</button><button data-key="v" aria-label="Volume up">VOL +</button></div>
+      <button data-key="d" class="last-channel">↶ Back to previous channel <span>D</span></button>
+      <div class="watch-note"><span>↗</span><p>Pick a channel here.<br>Watch it on your TV.</p></div>
+      <div class="player-footer">CHANNELBOX <span>PI 5</span></div>
+    </aside>
+  </div>
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>
