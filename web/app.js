@@ -2,7 +2,7 @@
 const $ = id => document.getElementById(id);
 const token = document.querySelector('meta[name="guide-token"]').content;
 const ROW = 104, PAGE = 80;
-const state = {group:'', favorites:false, q:'', meta:null, current:null, count:0, pages:new Map(), loading:new Set(), generation:0, connected:false};
+const state = {group:'', favorites:false, q:'', meta:null, current:null, count:0, pages:new Map(), loading:new Set(), generation:0, connected:false, stopped:false};
 let queryTimer, toastTimer, scrollFrame, controlQueue = Promise.resolve();
 
 function node(tag, cls, text) { const e=document.createElement(tag); if(cls)e.className=cls; if(text!==undefined)e.textContent=text; return e; }
@@ -127,6 +127,15 @@ function renderRows() {
   $('channels').replaceChildren(fragment);
 }
 function displayStatus(status) {
+  state.stopped=status.running===false;
+  document.querySelectorAll('[data-key],#exit-player').forEach(b=>b.disabled=state.stopped);
+  if(state.stopped){
+    const hadChannel=!!state.current;state.current=null;state.connected=false;
+    $('connection').textContent='Player stopped';$('connection-dot').className='dot offline';
+    $('now-number').textContent='PLAYBACK OFF';$('now-name').textContent='Player stopped';
+    $('now-group').textContent='Restart the player or reboot the Pi to watch again.';
+    $('now-logo').textContent='▦';showCurrentProgramme({});if(hadChannel)renderRows();return;
+  }
   const changed=state.current?.number!==status.number;state.current=status;state.connected=true;
   $('connection').textContent='Connected to your TV';$('connection-dot').className='dot online';
   $('now-number').textContent='CHANNEL '+status.number;$('now-name').textContent=status.name;
@@ -144,7 +153,7 @@ async function status() {
   catch(_){state.connected=false;$('connection').textContent='TV player disconnected';$('connection-dot').className='dot offline';}
 }
 function command(data, done) {
-  controlQueue=controlQueue.then(async()=>{try{displayStatus(await api('/api/control',data));if(done)await done();}catch(error){toast(error.message,true);await status();}});
+  controlQueue=controlQueue.then(async()=>{if(state.stopped){toast('The TV player is stopped. Restart it or reboot the Pi to resume.',true);return;}try{displayStatus(await api('/api/control',data));if(done)await done();}catch(error){toast(error.message,true);await status();}});
   return controlQueue;
 }
 $('all-channels').onclick=()=>selectLibrary();$('favorites').onclick=()=>selectLibrary('',true);
@@ -156,6 +165,7 @@ window.addEventListener('resize',()=>renderRows());
 $('open-menu').onclick=()=>{$('sidebar').classList.add('open');$('menu-backdrop').hidden=false;};$('close-menu').onclick=closeMenu;$('menu-backdrop').onclick=closeMenu;
 $('reload-library').onclick=async()=>{try{await loadMeta();resetResults();await status();toast('Channel library refreshed');}catch(error){toast(error.message,true);}};
 document.querySelectorAll('[data-key]').forEach(b=>b.onclick=()=>command({action:'key',key:b.dataset.key}));
+$('exit-player').onclick=()=>command({action:'exit'},()=>toast('TV player stopped'));
 document.addEventListener('keydown',e=>{if(e.key==='/'&&!e.target.closest('input')){e.preventDefault();$('search').focus();}if(e.key==='Escape'){closeMenu();if(document.activeElement===$('search')){$('search').value='';state.q='';resetResults();}}});
 async function start(){try{await loadMeta();resetResults();await status();}catch(error){toast(error.message,true);$('subtitle').textContent='Could not load the channel library. Try Refresh library.';}}
 start();setInterval(()=>{if(!document.hidden)status();},5000);setInterval(()=>{if(!document.hidden)loadMeta().catch(()=>{});},30000);
