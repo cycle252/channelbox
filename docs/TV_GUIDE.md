@@ -30,6 +30,10 @@ six channel rows and a two-hour timeline. Future browsing is capped at 24h.
 Network TV means the playlist's affiliate/network groups, not a geographic
 search for channels near the viewer.
 
+The TV interface shares the browser guide's charcoal background and lime-green
+accent (`#c7f37a`). Green marks the focused programme, active library, channel
+details and current-time line; muted gray text separates secondary information.
+
 ## Enable on another installation
 
 With the portable source and an already prepared private playlist:
