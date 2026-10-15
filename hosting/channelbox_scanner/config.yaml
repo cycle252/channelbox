@@ -1,0 +1,24 @@
+name: ChannelBox Scanner
+version: "0.3.2"
+slug: channelbox_scanner
+description: Check US IPTV streams at home and publish a stable ChannelBox playlist
+arch:
+  - aarch64
+  - amd64
+startup: application
+boot: auto
+init: false
+options:
+  timezone: America/Chicago
+  scan_hour: 4
+  workers: 4
+  full_scan_request: 0
+  github_repository: ""
+  github_token: ""
+schema:
+  timezone: str
+  scan_hour: int(0,23)
+  workers: int(1,8)
+  full_scan_request: int(0,2147483647)
+  github_repository: str
+  github_token: password
